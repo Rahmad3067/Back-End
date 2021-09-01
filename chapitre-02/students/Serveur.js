@@ -17,16 +17,23 @@ const students = [
 ];
 
 app.get('/students', (req, res) => {
-    res.send(students)
+    res.json({
+		status: 'OK',
+		data: students,
+	});
 });
 
-app.post('/students', (req, res) => {
-    console.log(req.body)
-    const userInfo = req.body;
-    console.log(userInfo);
 
-    students.push(userInfo)
-    res.json(students);
+
+
+app.post('/students', (req, res) => {
+    const studentInfo = req.body;
+    students.push(studentInfo)
+    res.json({
+		status: 'ok',
+		message: 'New student added',
+		data: students,
+	});
 })
 
 
