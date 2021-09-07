@@ -63,10 +63,31 @@ app.get("/heroes/:name/power", async (req, res) => {
     const hero = superHeros.find((obj) => obj.name.toLocaleLowerCase().replace(' ', "")=== param.toLocaleLowerCase());
 
     res.json({
-                status: 'Ok',
-                data: hero.power
-            })
+    status: 'Ok',
+    data: hero.power
 })
+})
+
+app.patch("/heroes/:name/powers", async(req, res) => {
+    const name = req.params.name;
+    const newPower = req.body.newPower
+    // Here we call our array and then updateOne to only update the matching filter
+    await SuperHeros.updateOne(
+        //Then we add power by a condition that if name we enter is the name we looking for and then we update and add a new power
+        {name : name },
+        { $push: { power: newPower } }
+     )
+    res.json({
+        status: "Ok",
+        message: "Power added !",
+        data: newPower
+    })
+})
+
+
+
+
+
 
 app.listen(process.env.PORT, () => {
 	console.log("Server started, listening on port");
