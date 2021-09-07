@@ -32,7 +32,12 @@ app.post('/upload', upload.single('image'),  (req, res) => {
     fs.renameSync(req.file.path, path.join(req.file.destination, req.file.originalname));
     res.send("ok");
   });
-  
+
+  app.get('/username', (req, res) => {
+    
+    res.send(username);
+    })
+;
 
   
 

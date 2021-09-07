@@ -1,77 +1,73 @@
-const { name } = require('ci-info');
-const { names } = require('debug');
 const express = require('express');
-const { all } = require('proxy-addr');
+const debug = require('./middlewares/debug')
 const app = express();
+const dotenv = require("dotenv");
+dotenv.config({
+    path: "./config.env"
+});
+const mongoose = require("mongoose");
 
-const PORT = 4000;
+mongoose.connect(process.env.DB, {
+    useNewUrlParser: true,
+})
+.then(() => {
+    console.log("Connected to MongoDB !");
+});
 
 app.use(express.json());
 
-const superHeros = [
-    {
-        name: "Iron Man",
-        power: ["money"],
-        color: "red",
-        isAlive: true,
-        age: 46,
-        image: "https://blog.fr.playstation.com/tachyon/sites/10/2019/07/unnamed-file-18.jpg?resize=1088,500&crop_strategy=smart"
-    },
-    {
-        name: "Thor",
-        power: ["electricty", "worthy"],
-        color: "blue",
-        isAlive: true,
-        age: 300,
-        image: "https://www.bdfugue.com/media/catalog/product/cache/1/image/400x/17f82f742ffe127f42dca9de82fb58b1/9/7/9782809465761_1_75.jpg"
-    },
-    {
-        name: "Daredevil",
-        power: ["blind"],
-        color: "red",
-        isAlive: false,
-        age: 30,
-        image: "https://aws.vdkimg.com/film/2/5/1/1/251170_backdrop_scale_1280xauto.jpg"
-    }
-]
 
+const superHerosSchema = new mongoose.Schema({
+    name: String,
+    power: Array,
+    color: String,
+    isAlive: Boolean,
+    age: Number,
+    image: String,
+})
 
-app.use(function(req, res, next) {
-    console.log("middleware is done");
-    next(); 
-  });
-
-
-app.post('/superHeros', function (req, res) {
-    const heroInfo = req.body;
-    console.log(heroInfo);
-    superHeros.push(heroInfo)
-    res.json(superHeros);
-  });
-
-  app.get('/heros', (req, res) => {
-      const newHeros = superHeros.map(hero => {
-        return hero.name
-      })
-    res.json(newHeros);
-});
-
-app.get('/heros/:name', (req, res) => {
-    let param = req.params.name;
-    var singleHero = superHeros.filter(function(hero) {
-        return param === hero.name
+const SuperHeros = mongoose.model("superHeros", superHerosSchema);
+app.post("/heroes", async (req, res) => {
+    console.log("SuperHeros")
+    console.log(req.body)
+    await SuperHeros.create(req.body);
+    res.json({
+        message:"Heroes Created and Added...",
     })
-        res.json(singleHero)
 })
-// app.listen(PORT, function() {
-// 	console.log(`Server started, listening on port ${PORT}`);
-// });
-app.listen(PORT, () => {
-	console.log(`Server started, listening on port ${PORT}`);
+
+app.use(debug);
+
+app.get("/heroes", async (req, res) => {
+    const superHeros = await SuperHeros.find();
+    res.json({
+        message: "Heroes List",
+        data: superHeros,
+    })
+})
+
+app.get("/heroes/:name", async (req, res) => {
+    const superHeros = await SuperHeros.find();
+    let param = req.params.name;
+    const newHeroes = superHeros.filter((hero) =>
+        hero.name.toLocaleLowerCase().replace(' ','') === param.toLocaleLowerCase());
+    res.json({
+        message: "Hero by the name...",
+        data: newHeroes,
+    })
 });
 
-app.get('/heroes/:name/powers', (req, res) => {
+app.get("/heroes/:name/power", async (req, res) => {
+    const superHeros = await SuperHeros.find();
     let param = req.params.name;
-    let hero = superHeros.filter(param.powers)
-    res.json(hero)
+    const hero = superHeros.find((obj) => obj.name.toLocaleLowerCase().replace(' ', "")=== param.toLocaleLowerCase());
+
+    res.json({
+                status: 'Ok',
+                data: hero.power
+            })
 })
+
+app.listen(process.env.PORT, () => {
+	console.log("Server started, listening on port");
+});
