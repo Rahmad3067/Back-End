@@ -1,74 +1,96 @@
 const express = require('express');
 const app = express();
+const dotenv = require("dotenv");
+dotenv.config({
+  path: "./config.env"
+});
+const mongoose = require("mongoose");
+
+mongoose.connect(process.env.DB, {
+  useNewUrlParser: true,
+})
+.then(() => {
+  console.log("Connected to MongoDB !");
+});
+
+app.use(express.json());
+
+const authorsSchema = new mongoose.Schema({
+  name: String,
+  nationality: String,
+  books: Array,
+})
+
+const Authors = mongoose.model("authors", authorsSchema);
+app.post("/", async (req, res) => {
+  console.log("Author");
+  console.log(req.body)
+  await Authors.create(req.body);
+  res.json({
+    message: "Authors List"
+  })
+})
 
 
-var authors = [
-    {
-        name: "Lawrence Nowell",
-        nationality: "UK",
-        books: ["Beowulf"]
-    },
-    {
-        name: "William Shakespeare",
-        nationality: "UK",
-        books: ["Hamlet", "Othello", "Romeo and Juliet", "MacBeth"]
-    },
-    {
-        name: "Charles Dickens",
-        nationality: "US",
-        books: ["Oliver Twist", "A Christmas Carol"]
-    },
-    {
-        name: "Oscar Wilde",
-        nationality: "UK",
-        books: ["The Picture of Dorian Gray", "The Importance of Being Earnest"]
-    },
-]
 // Ex1
-const port = 8000;
-app.listen(port, () => {
-    console.log("server is ready on port " + port);
-});
+app.get("/", async(req, res) => {
+  const newAuthors = await Authors.find();
+  res.json({
+    message: "Authors",
+    data: newAuthors,
+  })
+})
 
-app.get('/', (req, res) =>{
-    res.send("Authors API");
-});
-// EX2
-app.get('/authors/:id', (req, res) => {
-    let num = req.params.id;
-    let num2 = num - 1
-    res.send(`${authors[num2].name}, ${authors[num2].nationality}`)
-  });
+//Ex2
+app.get("/authors/:id", async(req, res) => {
+  const author = await Authors.findById(req.params.id);
+  res.json({
+    message: "Authors By Nationality",
+    data: (`${author.name}, ${author.nationality}`)
+  })
+})
+
 
 //Ex3
-app.get('/authors/:id/books', (req, res) => {
-    let num = req.params.id;
-    let num2 = num - 1
-    res.send(`${authors[num2].books}`)
-  });
+app.get("/authors/:id/books", async(req, res) => {
+  const author = await Authors.findById(req.params.id);
+  res.json({
+    message: "Author's Books",
+    data: author.books
+  })
+})
+// Ex part 4 is already answered with MongoDB with 
 
 // EX4
 // first part
-app.get('/json/authors/:id', (req, res) => {
-    let num = req.params.id;
-    let name = authors[num].name
-    let nationality = authors[num].nationality
-    res.json({
-      name: name,
-      nationality : nationality
-    });
-  });
+// app.get('/json/authors/:id', (req, res) => {
+//     let num = req.params.id;
+//     let name = authors[num].name
+//     let nationality = authors[num].nationality
+//     res.json({
+//       name: name,
+//       nationality : nationality
+//     });
+//   });
 
 
 // second part
-app.get('/json/authors/:id/books', (req, res) => {
-    let num = req.params.id;
-    let books = authors[num].books
-    res.json({
-      books: books
-    });
-  });
+// app.get('/json/authors/:id/books', (req, res) => {
+//     let num = req.params.id;
+//     let books = authors[num].books
+//     res.json({
+//       books: books
+//     });
+//   });
 
+
+
+
+
+
+  app.listen(process.env.PORT, () => {
+    console.log("Listening on Port");
+});
 
 
   

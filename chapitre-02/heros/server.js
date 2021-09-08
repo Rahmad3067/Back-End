@@ -75,6 +75,7 @@ app.patch("/heroes/:name/powers", async(req, res) => {
     await SuperHeros.updateOne(
         //Then we add power by a condition that if name we enter is the name we looking for and then we update and add a new power
         {name : name },
+        // Then we use this Method to add the new Power in the place of the power
         { $push: { power: newPower } }
      )
     res.json({
